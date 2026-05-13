@@ -2,14 +2,17 @@
 
 from alembic import context
 from sqlalchemy import pool
-from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app import models  # noqa: F401
 from app.core.config import get_settings
-from app.core.database import Base
+from app.core.database import Base, create_database_engine, database_url_without_asyncpg_ssl_query
 
 config = context.config
-config.set_main_option("sqlalchemy.url", get_settings().database_url)
+settings = get_settings()
+config.set_main_option(
+    "sqlalchemy.url",
+    database_url_without_asyncpg_ssl_query(settings.database_url),
+)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
@@ -31,9 +34,8 @@ def do_run_migrations(connection) -> None:
 
 
 async def run_migrations_online() -> None:
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+    connectable = create_database_engine(
+        settings,
         poolclass=pool.NullPool,
     )
     async with connectable.connect() as connection:

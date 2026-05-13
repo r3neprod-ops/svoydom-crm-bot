@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     app_port: int = Field(8000, validation_alias=AliasChoices("APP_PORT", "PORT"))
     public_base_url: str = "https://example.com"
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/svoydom_crm"
+    db_ssl: bool = Field(False, validation_alias="DB_SSL")
     bot_token: str = "replace-with-telegram-bot-token"
     admin_telegram_ids_raw: str = Field("", validation_alias="ADMIN_TELEGRAM_IDS")
     site_webhook_secret: str = Field(

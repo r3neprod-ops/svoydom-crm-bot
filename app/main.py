@@ -1,4 +1,5 @@
-﻿from contextlib import asynccontextmanager
+﻿import logging
+from contextlib import asynccontextmanager
 
 from aiogram.types import Update
 from fastapi import FastAPI, HTTPException, Request, status
@@ -11,6 +12,7 @@ from app.bot.dispatcher import create_bot, create_dispatcher
 from app.core.config import get_settings
 from app.core.database import AsyncSessionLocal
 
+logger = logging.getLogger(__name__)
 settings = get_settings()
 bot = create_bot()
 dispatcher = create_dispatcher()
@@ -57,8 +59,15 @@ async def health_head() -> Response:
 
 @app.get("/health/db")
 async def health_db() -> dict[str, str]:
-    async with AsyncSessionLocal() as session:
-        await session.execute(text("SELECT 1"))
+    try:
+        async with AsyncSessionLocal() as session:
+            await session.execute(text("SELECT 1"))
+    except Exception as exc:
+        logger.exception("Database health check failed")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database health check failed",
+        ) from exc
     return {"status": "ok"}
 
 

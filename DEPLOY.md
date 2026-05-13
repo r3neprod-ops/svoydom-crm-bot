@@ -18,7 +18,8 @@ Create `.env` on the server from `.env.example` and fill real values there only.
 
 Important production variables:
 
-- `DATABASE_URL`: PostgreSQL URL for SQLAlchemy asyncpg. For Timeweb PostgreSQL start with `?ssl=require`.
+- `DATABASE_URL`: PostgreSQL URL for SQLAlchemy asyncpg. For Timeweb PostgreSQL do not add SSL query parameters to this URL.
+- `DB_SSL`: set to `true` for Timeweb PostgreSQL so asyncpg receives SSL through SQLAlchemy `connect_args`.
 - `BOT_TOKEN`: Telegram bot token.
 - `ADMIN_TELEGRAM_IDS`: comma-separated Telegram user IDs for admins.
 - `CRM_WEBHOOK_TOKEN`: secret expected from the website in `X-Webhook-Secret`.
@@ -30,13 +31,14 @@ Important production variables:
 - `APP_PORT`: app port for VPS/Docker Compose deployments, defaults to `8000`.
 - `PORT`: app port injected by platforms such as Timeweb Cloud Apps. If it exists, the Docker start command uses it before `APP_PORT`.
 
-If the database password contains special characters, URL-encode it before putting it into `DATABASE_URL`. Example format:
+If the database password contains special characters, URL-encode it before putting it into `DATABASE_URL`. Example format for Timeweb PostgreSQL:
 
 ```text
-postgresql+asyncpg://USER:URL_ENCODED_PASSWORD@HOST:5432/DB_NAME?ssl=require
+DATABASE_URL=postgresql+asyncpg://USER:URL_ENCODED_PASSWORD@HOST:5432/DB_NAME
+DB_SSL=true
 ```
 
-If Timeweb requires certificate verification instead of simple SSL, use the exact SSL mode/certificate settings from the Timeweb PostgreSQL connection page and test migrations before starting the app.
+Do not append `?ssl=require`, `sslmode=verify-full`, or `target_session_attrs=...` to `DATABASE_URL` for this FastAPI app. Those psql-style parameters can be interpreted differently by SQLAlchemy/asyncpg and may cause connection errors such as `TargetServerAttributeNotMatched`. The app strips legacy SSL-related query parameters and enables SSL via `DB_SSL=true` for compatibility.
 
 ## 3. Docker Deploy
 
