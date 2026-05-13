@@ -1,7 +1,24 @@
-﻿from functools import lru_cache
+﻿import json
+from functools import lru_cache
 
-from pydantic import AliasChoices, Field, field_validator
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _parse_env_list(value: str) -> list[str]:
+    value = value.strip()
+    if not value:
+        return []
+
+    if value.startswith("["):
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError:
+            parsed = None
+        if isinstance(parsed, list):
+            return [str(item).strip() for item in parsed if str(item).strip()]
+
+    return [item.strip() for item in value.split(",") if item.strip()]
 
 
 class Settings(BaseSettings):
@@ -12,7 +29,7 @@ class Settings(BaseSettings):
     public_base_url: str = "https://example.com"
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/svoydom_crm"
     bot_token: str = "replace-with-telegram-bot-token"
-    admin_telegram_ids: list[int] = Field(default_factory=list)
+    admin_telegram_ids_raw: str = Field("", validation_alias="ADMIN_TELEGRAM_IDS")
     site_webhook_secret: str = Field(
         "replace-with-random-shared-secret",
         validation_alias=AliasChoices("SITE_WEBHOOK_SECRET", "CRM_WEBHOOK_TOKEN", "WEBHOOK_SECRET"),
@@ -28,23 +45,20 @@ class Settings(BaseSettings):
     telegram_webhook_url: str | None = None
     lead_reminder_minutes: int = 30
     lead_reassign_minutes: int = 60
-    cors_origins: list[str] = Field(default_factory=lambda: ["https://svoydom-lugansk.ru"])
+    cors_origins_raw: str = Field(
+        "https://svoydom-lugansk.ru",
+        validation_alias="CORS_ORIGINS",
+    )
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    @field_validator("admin_telegram_ids", mode="before")
-    @classmethod
-    def parse_int_list(cls, value: str | list[int]) -> list[int]:
-        if isinstance(value, str):
-            return [int(item.strip()) for item in value.split(",") if item.strip()]
-        return value
+    @property
+    def admin_telegram_ids(self) -> list[int]:
+        return [int(item) for item in _parse_env_list(self.admin_telegram_ids_raw)]
 
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def parse_str_list(cls, value: str | list[str]) -> list[str]:
-        if isinstance(value, str):
-            return [item.strip() for item in value.split(",") if item.strip()]
-        return value
+    @property
+    def cors_origins(self) -> list[str]:
+        return _parse_env_list(self.cors_origins_raw)
 
 
 @lru_cache
