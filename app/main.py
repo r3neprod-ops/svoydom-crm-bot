@@ -3,6 +3,7 @@
 from aiogram.types import Update
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.api.routes import leads, managers
@@ -34,9 +35,14 @@ app.include_router(leads.router, prefix="/api", tags=["leads"])
 app.include_router(managers.router, prefix="/api", tags=["managers"])
 
 
+@app.get("/")
+async def root() -> JSONResponse:
+    return JSONResponse({"status": "ok", "service": settings.app_name})
+
+
 @app.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok"}
+async def health() -> JSONResponse:
+    return JSONResponse({"status": "ok"})
 
 
 @app.get("/health/db")
@@ -50,7 +56,10 @@ async def health_db() -> dict[str, str]:
 async def telegram_webhook(request: Request) -> dict[str, bool]:
     secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
     if secret and secret != settings.telegram_webhook_secret:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Telegram secret")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Telegram secret",
+        )
     update = Update.model_validate(await request.json(), context={"bot": bot})
     await dispatcher.feed_update(bot, update)
     return {"ok": True}

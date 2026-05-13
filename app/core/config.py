@@ -7,8 +7,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = "SvoyDom CRM Bot"
     app_env: str = "local"
-    app_host: str = "0.0.0.0"
-    app_port: int = 8000
+    app_host: str = Field("0.0.0.0", validation_alias=AliasChoices("APP_HOST", "HOST"))
+    app_port: int = Field(8000, validation_alias=AliasChoices("APP_PORT", "PORT"))
     public_base_url: str = "https://example.com"
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/svoydom_crm"
     bot_token: str = "replace-with-telegram-bot-token"

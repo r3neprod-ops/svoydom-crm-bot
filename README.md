@@ -27,6 +27,8 @@ uvicorn app.main:app --reload
 
 See [DEPLOY.md](DEPLOY.md) for Timeweb VPS/Cloud deployment with Docker, PostgreSQL SSL connection settings, Nginx HTTPS, migrations, and Telegram webhook registration.
 
+For Timeweb Cloud Apps, the container must listen on the platform `PORT` variable when it is provided. The Dockerfile does this by default; custom start commands should use `sh -c 'uvicorn app.main:app --host "${APP_HOST:-0.0.0.0}" --port "${PORT:-${APP_PORT:-8000}}"'`.
+
 The website lead endpoint is `POST /api/site/leads`. Pass `X-Webhook-Secret` with the value from `.env`.
 
 Telegram webhook path defaults to `POST /telegram/webhook`. In production, point Telegram webhook to `PUBLIC_BASE_URL + TELEGRAM_WEBHOOK_PATH`.

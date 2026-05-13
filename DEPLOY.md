@@ -27,6 +27,8 @@ Important production variables:
 - `TELEGRAM_WEBHOOK_PATH`: webhook route, defaults to `/telegram/webhook`.
 - `TELEGRAM_WEBHOOK_URL`: full public webhook URL, usually `PUBLIC_BASE_URL + TELEGRAM_WEBHOOK_PATH`.
 - `CORS_ORIGINS`: comma-separated allowed website origins.
+- `APP_PORT`: app port for VPS/Docker Compose deployments, defaults to `8000`.
+- `PORT`: app port injected by platforms such as Timeweb Cloud Apps. If it exists, the Docker start command uses it before `APP_PORT`.
 
 If the database password contains special characters, URL-encode it before putting it into `DATABASE_URL`. Example format:
 
@@ -79,6 +81,14 @@ Check health:
 curl http://127.0.0.1:8000/health
 curl http://127.0.0.1:8000/health/db
 ```
+
+For Timeweb Cloud Apps, use the Dockerfile or this start command so the app binds to the platform-provided port:
+
+```bash
+sh -c 'uvicorn app.main:app --host "${APP_HOST:-0.0.0.0}" --port "${PORT:-${APP_PORT:-8000}}"'
+```
+
+Do not hard-code `--port 8000` on a platform that injects `PORT`; the container can be marked running while the public proxy checks a different port.
 
 ## 4. Python + systemd Alternative
 
@@ -174,7 +184,7 @@ For a Next.js frontend, store the backend URL and webhook token in server-only e
 
 1. Fill `.env` on the server with production values.
 2. Run `alembic upgrade head`.
-3. Start the app and verify `/health` and `/health/db`.
+3. Start the app and verify `/` and `/health` first, then `/health/db`.
 4. Configure HTTPS for the API domain.
 5. Register Telegram webhook with `secret_token`.
 6. Send a test lead from the website backend and confirm it appears in Telegram/CRM flow.
