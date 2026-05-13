@@ -3,7 +3,7 @@
 from aiogram.types import Update
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from sqlalchemy import text
 
 from app.api.routes import leads, managers
@@ -40,9 +40,19 @@ async def root() -> JSONResponse:
     return JSONResponse({"status": "ok", "service": settings.app_name})
 
 
+@app.head("/")
+async def root_head() -> Response:
+    return Response(status_code=status.HTTP_200_OK)
+
+
 @app.get("/health")
 async def health() -> JSONResponse:
     return JSONResponse({"status": "ok"})
+
+
+@app.head("/health")
+async def health_head() -> Response:
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @app.get("/health/db")

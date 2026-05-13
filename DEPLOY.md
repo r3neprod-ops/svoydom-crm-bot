@@ -82,6 +82,10 @@ curl http://127.0.0.1:8000/health
 curl http://127.0.0.1:8000/health/db
 ```
 
+Timeweb Cloud Apps may send `HEAD /` as a platform health check even when
+you use `/health` for manual checks. The app supports empty 200 responses for
+`HEAD /` and `HEAD /health`; keep `/health` for browser or curl verification.
+
 For Timeweb Cloud Apps, use the Dockerfile or this start command so the app binds to the platform-provided port:
 
 ```bash
@@ -184,7 +188,7 @@ For a Next.js frontend, store the backend URL and webhook token in server-only e
 
 1. Fill `.env` on the server with production values.
 2. Run `alembic upgrade head`.
-3. Start the app and verify `/` and `/health` first, then `/health/db`.
+3. Start the app and verify `/` and `/health` first, then `/health/db`. On Timeweb Cloud Apps, ensure root `HEAD /` returns 200 for the platform health check.
 4. Configure HTTPS for the API domain.
 5. Register Telegram webhook with `secret_token`.
 6. Send a test lead from the website backend and confirm it appears in Telegram/CRM flow.
