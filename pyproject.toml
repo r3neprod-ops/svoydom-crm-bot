@@ -1,4 +1,4 @@
-﻿[project]
+[project]
 name = "svoydom-crm-bot"
 version = "0.1.0"
 description = "Telegram CRM bot backend for SvoyDom lead processing"
@@ -21,6 +21,13 @@ dev = [
     "pytest>=8.2",
     "pytest-asyncio>=0.23",
 ]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
 
 [tool.ruff]
 line-length = 100
